@@ -39,7 +39,6 @@ func (msgProc MessageProcess) SendGroupMessageToServer(groupID int, userName str
 
 	dispatcher := utils.Dispatcher{Conn: conn}
 	err = dispatcher.SendData(data)
-
 	return
 }
 
@@ -77,11 +76,7 @@ func (msg MessageProcess) GetOnlineUerList() (err error) {
 	if err != nil {
 		return
 	}
-
-	for {
-		showAfterLoginMenu()
-	}
-
+	return
 }
 
 func (msgProc MessageProcess) PointToPointCommunication(targetUserName, sourceUserName, message string) (conn net.Conn, err error) {

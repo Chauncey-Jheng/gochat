@@ -40,9 +40,6 @@ func main() {
 		fmt.Printf("listen failed, error: %v", err)
 	}
 	defer listener.Close()
-	if err != nil {
-		fmt.Printf("some error when run server, error: %v", err)
-	}
 
 	for {
 		fmt.Printf("Waiting for client...\n")
@@ -52,7 +49,7 @@ func main() {
 			fmt.Printf("some error when accept server, error: %v", err)
 		}
 
-		// 一旦链接成功，在启动一个协程和客户端保持通讯
+		// 一旦链接成功，启动一个协程和客户端保持通讯
 		go dialogue(conn)
 	}
 }

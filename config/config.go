@@ -27,13 +27,12 @@ type redisInfo struct {
 var Configuration = configuration{}
 
 func init() {
-	filePath := path.Join(os.Getenv("GOPATH"), "src/go-chat/config/config.json")
+	filePath := path.Join(os.Getenv("GOCHATROOT"), "config/config.json")
 	file, err := os.Open(filePath)
-	defer file.Close()
 	if err != nil {
 		fmt.Printf("Open file error: %v\n", err)
 	}
-
+	defer file.Close()
 	decoder := json.NewDecoder(file)
 	err = decoder.Decode(&Configuration)
 	if err != nil {

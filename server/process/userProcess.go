@@ -25,7 +25,7 @@ func login(userName, passWord string) (user model.User, err error) {
 }
 
 // 响应客户端
-func (this *UserProcess) responseClient(responseMessageType string, code int, data string, err error) {
+func (this *UserProcess) responseClient(responseMessageType string, code int, data string) (err error) {
 	var responseMessage common.ResponseMessage
 	responseMessage.Code = code
 	responseMessage.Type = responseMessageType
@@ -39,6 +39,7 @@ func (this *UserProcess) responseClient(responseMessageType string, code int, da
 	dispatcher := utils.Dispatcher{Conn: this.Conn}
 
 	err = dispatcher.WriteData(responseData)
+	return
 }
 
 func (this *UserProcess) UserRegister(message string) (err error) {
@@ -61,7 +62,7 @@ func (this *UserProcess) UserRegister(message string) (err error) {
 	default:
 		code = 500
 	}
-	this.responseClient(common.RegisterResponseMessageType, code, data, err)
+	err = this.responseClient(common.RegisterResponseMessageType, code, data)
 	return
 }
 
@@ -93,6 +94,6 @@ func (this *UserProcess) UserLogin(message string) (err error) {
 	default:
 		code = 500
 	}
-	this.responseClient(common.LoginResponseMessageType, code, data, err)
+	err = this.responseClient(common.LoginResponseMessageType, code, data)
 	return
 }

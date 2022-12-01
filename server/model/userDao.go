@@ -7,26 +7,27 @@ import (
 	"github.com/gomodule/redigo/redis"
 )
 
-// UserDao 实例，全局唯一
+// UserDao (User Data access object)实例，全局唯一
 var CurrentUserDao *UserDao
 
 type UserDao struct {
 	pool *redis.Pool
 }
 
-// 初始化一个 UserDao 结构体示例，
+// 初始化一个 UserDao 结构体实例
 func InitUserDao(pool *redis.Pool) (currentUserDao *UserDao) {
 	currentUserDao = &UserDao{pool: pool}
 	return
 }
 
+// 用户 id 增长
 func idIncr(conn redis.Conn) (id int, err error) {
 	res, err := conn.Do("incr", "users_id")
-	id = int(res.(int64))
 	if err != nil {
 		fmt.Printf("id incr error: %v\n", err)
 		return
 	}
+	id = int(res.(int64))
 	return
 }
 
