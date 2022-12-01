@@ -17,8 +17,8 @@ func Init(choose int) {
 }
 
 func main() {
-	fmt.Println("Please enter the number to choose starting way:(1.CMD, 2.GUI)")
-	var num int
-	fmt.Scanf("%d\n", &num)
-	Init(num)
+	// fmt.Println("Please enter the number to choose starting way:(1.CMD, 2.GUI)")
+	// var num int
+	// fmt.Scanf("%d\n", &num)
+	Init(2)
 }
