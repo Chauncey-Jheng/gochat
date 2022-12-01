@@ -5,7 +5,6 @@ import (
 	common "go-chat/common/message"
 	"go-chat/server/model"
 	"go-chat/server/utils"
-	"io"
 	"net"
 )
 
@@ -70,13 +69,10 @@ func (this *Processor) MainProcess() {
 		dispatcher := utils.Dispatcher{Conn: this.Conn}
 		message, err := dispatcher.ReadData()
 		if err != nil {
-			if err == io.EOF {
-				cc := model.ClientConn{}
-				cc.Del(this.Conn)
-				fmt.Printf("client closed!\n")
-				break
-			}
-			fmt.Printf("get login message error: %v", err)
+			fmt.Printf("some error occured while reading data: %v\n", err)
+			cc := model.ClientConn{}
+			cc.Del(this.Conn)
+			break
 		}
 
 		// 处理来客户端的消息

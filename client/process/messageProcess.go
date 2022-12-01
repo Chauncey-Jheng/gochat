@@ -6,6 +6,8 @@ import (
 	common "go-chat/common/message"
 	"go-chat/config"
 	"net"
+
+	"fyne.io/fyne/v2"
 )
 
 type MessageProcess struct{}
@@ -15,10 +17,10 @@ func (msgProc MessageProcess) SendGroupMessageToServer(groupID int, userName str
 	// connect server
 	serverInfo := config.Configuration.ServerInfo
 	conn, err := net.Dial("tcp", serverInfo.Host)
-
 	if err != nil {
 		return
 	}
+	// defer conn.Close()
 
 	var message common.Message
 	message.Type = common.UserSendGroupMessageType
@@ -79,6 +81,45 @@ func (msg MessageProcess) GetOnlineUerList() (err error) {
 	return
 }
 
+// APP request all online user
+func (msg MessageProcess) APPGetOnlineUerList(userbox, groupbox, p2pbox *fyne.Container) (err error) {
+	serverInfo := config.Configuration.ServerInfo
+	conn, err := net.Dial("tcp", serverInfo.Host)
+	if err != nil {
+		return
+	}
+	//defer conn.Close()
+
+	var message = common.Message{}
+	message.Type = common.ShowAllOnlineUsersType
+
+	requestBody, err := json.Marshal("")
+	if err != nil {
+		return
+	}
+	message.Data = string(requestBody)
+
+	data, err := json.Marshal(message)
+	if err != nil {
+		return
+	}
+
+	dispatcher := utils.Dispatcher{Conn: conn}
+	err = dispatcher.SendData(data)
+	if err != nil {
+		return
+	}
+
+	errMsg := make(chan error)
+	go APPResponse(conn, errMsg, userbox, groupbox, p2pbox)
+	err = <-errMsg
+	if err != nil {
+		return
+	}
+	return
+}
+
+//p2p communication
 func (msgProc MessageProcess) PointToPointCommunication(targetUserName, sourceUserName, message string) (conn net.Conn, err error) {
 	serverInfo := config.Configuration.ServerInfo
 	conn, err = net.Dial("tcp", serverInfo.Host)

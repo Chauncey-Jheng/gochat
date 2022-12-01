@@ -33,7 +33,7 @@ func (gmp GroupMessageProcess) sendToGroupUsers(message string) (err error) {
 	}
 
 	for id, connInfo := range model.ClientConnsMap {
-		// do not send message to then sender
+		// do not send message to the sender
 		if sourceUserName == connInfo.UserName {
 			continue
 		}

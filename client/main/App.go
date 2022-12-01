@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"go-chat/client/logger"
+	"go-chat/client/model"
 	"go-chat/client/process"
 
 	"fyne.io/fyne/v2"
@@ -14,7 +15,7 @@ import (
 )
 
 //Login UI content
-func LoginUI(Index chan int) (content *fyne.Container) {
+func LoginUI(Index chan int, userbox, groupbox, p2pbox *fyne.Container) (content *fyne.Container) {
 	nameEntry := widget.NewEntry()
 	nameEntry.SetPlaceHolder("input name")
 	nameEntry.OnChanged = func(content string) {
@@ -36,7 +37,7 @@ func LoginUI(Index chan int) (content *fyne.Container) {
 		//cmd client return some status
 		//use a func to change UI according to status
 		up := process.UserProcess{}
-		err := up.Login(nameEntry.Text, passEntry.Text)
+		err := up.APPLogin(nameEntry.Text, passEntry.Text, userbox, groupbox, p2pbox)
 		if err != nil {
 			s := fmt.Sprintf("Login failed: %v\r\n", err)
 			logger.Error(s)
@@ -53,7 +54,7 @@ func LoginUI(Index chan int) (content *fyne.Container) {
 }
 
 //SignUp UI content
-func SignUpUI(Index chan int) (content *fyne.Container) {
+func SignUpUI(Index chan int, userbox, groupbox, p2pbox *fyne.Container) (content *fyne.Container) {
 	nameEntry := widget.NewEntry()
 	nameEntry.SetPlaceHolder("input name")
 	nameEntry.OnChanged = func(content string) {
@@ -73,7 +74,7 @@ func SignUpUI(Index chan int) (content *fyne.Container) {
 	SignUpBtn := widget.NewButton("Sign Up", func() {
 		fmt.Println("name:", nameEntry.Text, "password:", passEntry.Text, "password confirm:", passConfirmEntry.Text, "SignUp")
 		up := process.UserProcess{}
-		err := up.Register(nameEntry.Text, passEntry.Text, passConfirmEntry.Text)
+		err := up.APPRegister(nameEntry.Text, passEntry.Text, passConfirmEntry.Text, userbox, groupbox, p2pbox)
 		if err != nil {
 			s := fmt.Sprintf("Create account failed: %v\n", err)
 			logger.Error(s)
@@ -92,17 +93,65 @@ func SignUpUI(Index chan int) (content *fyne.Container) {
 	return
 }
 
-func MainUI(Index chan int) (content *container.AppTabs) {
-	showOnlineUser := container.NewVBox()
-	GroupChat := container.NewVBox()
-	P2PChat := container.NewVBox()
+func MainUI(Index chan int) (content *container.AppTabs, userbox, groupbox, p2pbox *fyne.Container) {
+	onlineUserBox := container.NewVBox()
+	groupChatBox := container.NewVBox()
+	P2PChatBox := container.NewVBox()
+
+	userbox, groupbox, p2pbox = onlineUserBox, groupChatBox, P2PChatBox
+
+	onlineUserScroll := container.NewVScroll(onlineUserBox)
+	showOnlineUserBtn := widget.NewButton("Show online", func() {
+		messageProcess := process.MessageProcess{}
+		messageProcess.APPGetOnlineUerList(onlineUserBox, groupChatBox, P2PChatBox)
+	})
+	showOnlineUser := container.NewVBox(onlineUserScroll, showOnlineUserBtn)
+
+	groupChatScroll := container.NewVScroll(groupChatBox)
+	groupChatEntry := widget.NewMultiLineEntry()
+	groupSendBtn := widget.NewButton("Send", func() {
+		currentUser := model.CurrentUser
+		messageProcess := process.MessageProcess{}
+		text := widget.NewLabel(currentUser.UserName + " say to everyone: " + groupChatEntry.Text)
+		groupChatBox.Add(text)
+		err := messageProcess.SendGroupMessageToServer(0, currentUser.UserName, groupChatEntry.Text)
+		if err != nil {
+			logger.Error("Some error occurred when send data to server: %v\n", err)
+		} else {
+			logger.Success("Send group message succeed!\n\n")
+		}
+	})
+
+	GroupChat := container.NewVBox(groupChatScroll, groupChatEntry, groupSendBtn)
+
+	P2PRecverEntry := widget.NewEntry()
+	P2PChatScroll := container.NewVScroll(P2PChatBox)
+	P2PChatEntry := widget.NewMultiLineEntry()
+	P2PSendBtn := widget.NewButton("Send", func() {
+		currentUser := model.CurrentUser
+		text := widget.NewLabel(currentUser.UserName + " say to " + P2PRecverEntry.Text + " : " + P2PChatEntry.Text)
+		P2PChatBox.Add(text)
+		messageProcess := process.MessageProcess{}
+		conn, err := messageProcess.PointToPointCommunication(P2PRecverEntry.Text, currentUser.UserName, P2PChatEntry.Text)
+		if err != nil {
+			logger.Error("Some error occurred when point to point comunication: %v\n", err)
+			return
+		}
+		errMsg := make(chan error)
+		go process.Response(conn, errMsg)
+		err = <-errMsg
+
+		if err.Error() != "<nil>" {
+			logger.Error("Send message error: %v\n", err)
+		}
+	})
+	P2PChat := container.NewVBox(P2PRecverEntry, P2PChatScroll, P2PChatEntry, P2PSendBtn)
 
 	content = container.NewAppTabs(
 		container.NewTabItem("Show online user", showOnlineUser),
 		container.NewTabItem("Group chat", GroupChat),
 		container.NewTabItem("P2P chat", P2PChat),
 	)
-
 	content.SetTabLocation(container.TabLocationLeading)
 	return
 }
@@ -138,9 +187,15 @@ func GUI() {
 	w3 := a.NewWindow("GOCHAT")
 	Index := make(chan int)
 
-	w1.SetContent(LoginUI(Index))
-	w2.SetContent(SignUpUI(Index))
-	w3.SetContent(MainUI(Index))
+	content, userbox, groupbox, p2pbox := MainUI(Index)
+	w3.SetContent(content)
+	w3.Resize(fyne.Size{Width: 800, Height: 600})
+
+	w1.SetContent(LoginUI(Index, userbox, groupbox, p2pbox))
+	w1.Resize(fyne.Size{Width: 300, Height: 300})
+
+	w2.SetContent(SignUpUI(Index, userbox, groupbox, p2pbox))
+	w2.Resize(fyne.Size{Width: 300, Height: 300})
 
 	go changeWindow(&w1, &w2, &w3, Index)
 

@@ -24,8 +24,8 @@ const (
 )
 
 type Message struct {
-	Type string `json:"type"`
-	Data string `json:"data"`
+	Type string
+	Data string
 }
 
 type LoginMessage struct {
