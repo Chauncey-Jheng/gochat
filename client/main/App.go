@@ -10,7 +10,6 @@ import (
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/app"
 	"fyne.io/fyne/v2/container"
-	"fyne.io/fyne/v2/layout"
 	"fyne.io/fyne/v2/widget"
 )
 
@@ -24,8 +23,8 @@ func LoginUI(Index chan int, userbox, groupbox, p2pbox *fyne.Container) (content
 	passEntry := widget.NewPasswordEntry()
 	passEntry.SetPlaceHolder("input password")
 
-	nameBox := container.NewHBox(widget.NewLabel("Name"), layout.NewSpacer(), nameEntry)
-	passwordBox := container.NewHBox(widget.NewLabel("Password"), layout.NewSpacer(), passEntry)
+	nameBox := container.NewGridWithColumns(2, widget.NewLabel("Name"), nameEntry)
+	passwordBox := container.NewGridWithColumns(2, widget.NewLabel("Password"), passEntry)
 
 	statusLabel := widget.NewLabel("")
 
@@ -65,9 +64,9 @@ func SignUpUI(Index chan int, userbox, groupbox, p2pbox *fyne.Container) (conten
 	passConfirmEntry := widget.NewPasswordEntry()
 	passConfirmEntry.SetPlaceHolder("confirm password")
 
-	nameBox := container.NewHBox(widget.NewLabel("Name"), layout.NewSpacer(), nameEntry)
-	passwordBox := container.NewHBox(widget.NewLabel("Password"), layout.NewSpacer(), passEntry)
-	passConfirmBox := container.NewHBox(widget.NewLabel("Password"), layout.NewSpacer(), passConfirmEntry)
+	nameBox := container.NewGridWithColumns(2, widget.NewLabel("Name"), nameEntry)
+	passwordBox := container.NewGridWithColumns(2, widget.NewLabel("Password"), passEntry)
+	passConfirmBox := container.NewGridWithColumns(2, widget.NewLabel("Password"), passConfirmEntry)
 
 	statusLabel := widget.NewLabel("")
 
@@ -105,10 +104,11 @@ func MainUI(Index chan int) (content *container.AppTabs, userbox, groupbox, p2pb
 		messageProcess := process.MessageProcess{}
 		messageProcess.APPGetOnlineUerList(onlineUserBox, groupChatBox, P2PChatBox)
 	})
-	showOnlineUser := container.NewVBox(onlineUserScroll, showOnlineUserBtn)
+	showOnlineUser := container.NewGridWithRows(2, onlineUserScroll, showOnlineUserBtn)
 
 	groupChatScroll := container.NewVScroll(groupChatBox)
 	groupChatEntry := widget.NewMultiLineEntry()
+	groupChatEntry.SetPlaceHolder("Please enter something...")
 	groupSendBtn := widget.NewButton("Send", func() {
 		currentUser := model.CurrentUser
 		messageProcess := process.MessageProcess{}
@@ -122,11 +122,14 @@ func MainUI(Index chan int) (content *container.AppTabs, userbox, groupbox, p2pb
 		}
 	})
 
-	GroupChat := container.NewVBox(groupChatScroll, groupChatEntry, groupSendBtn)
+	GroupChat := container.NewGridWithRows(3, groupChatScroll, groupChatEntry, groupSendBtn)
 
-	P2PRecverEntry := widget.NewEntry()
 	P2PChatScroll := container.NewVScroll(P2PChatBox)
+	P2PRecverEntry := widget.NewEntry()
+	P2PRecverEntry.SetPlaceHolder("Please enter the receiver's name...")
 	P2PChatEntry := widget.NewMultiLineEntry()
+	P2PChatEntry.SetPlaceHolder("Please enter something you want to say...")
+	P2PChatArea := container.NewHSplit(P2PRecverEntry, P2PChatEntry)
 	P2PSendBtn := widget.NewButton("Send", func() {
 		currentUser := model.CurrentUser
 		text := widget.NewLabel(currentUser.UserName + " say to " + P2PRecverEntry.Text + " : " + P2PChatEntry.Text)
@@ -145,7 +148,7 @@ func MainUI(Index chan int) (content *container.AppTabs, userbox, groupbox, p2pb
 			logger.Error("Send message error: %v\n", err)
 		}
 	})
-	P2PChat := container.NewVBox(P2PRecverEntry, P2PChatScroll, P2PChatEntry, P2PSendBtn)
+	P2PChat := container.NewGridWithRows(3, P2PChatScroll, P2PChatArea, P2PSendBtn)
 
 	content = container.NewAppTabs(
 		container.NewTabItem("Show online user", showOnlineUser),
@@ -190,12 +193,15 @@ func GUI() {
 	content, userbox, groupbox, p2pbox := MainUI(Index)
 	w3.SetContent(content)
 	w3.Resize(fyne.Size{Width: 800, Height: 600})
+	w3.CenterOnScreen()
 
 	w1.SetContent(LoginUI(Index, userbox, groupbox, p2pbox))
-	w1.Resize(fyne.Size{Width: 300, Height: 300})
+	w1.Resize(fyne.Size{Width: 500, Height: 300})
+	w1.CenterOnScreen()
 
 	w2.SetContent(SignUpUI(Index, userbox, groupbox, p2pbox))
-	w2.Resize(fyne.Size{Width: 300, Height: 300})
+	w2.Resize(fyne.Size{Width: 500, Height: 300})
+	w2.CenterOnScreen()
 
 	go changeWindow(&w1, &w2, &w3, Index)
 

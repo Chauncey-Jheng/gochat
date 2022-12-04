@@ -13,17 +13,6 @@ type UserProcess struct {
 	Conn net.Conn
 }
 
-func register(userName, passWord, passWordConfirm string) (user model.User, err error) {
-	user, err = model.CurrentUserDao.Register(userName, passWord, passWordConfirm)
-	return
-}
-
-func login(userName, passWord string) (user model.User, err error) {
-	// 判断用户名和密码
-	user, err = model.CurrentUserDao.Login(userName, passWord)
-	return
-}
-
 // 响应客户端
 func (this *UserProcess) responseClient(responseMessageType string, code int, data string) (err error) {
 	var responseMessage common.ResponseMessage
@@ -51,7 +40,7 @@ func (this *UserProcess) UserRegister(message string) (err error) {
 		code = common.ServerError
 	}
 
-	_, err = register(info.UserName, info.Password, info.PasswordConfirm)
+	_, err = model.CurrentUserDao.Register(info.UserName, info.Password, info.PasswordConfirm)
 	switch err {
 	case nil:
 		code = common.RegisterSucceed
@@ -75,7 +64,7 @@ func (this *UserProcess) UserLogin(message string) (err error) {
 		code = common.ServerError
 	}
 
-	user, err := login(info.UserName, info.Password)
+	user, err := model.CurrentUserDao.Login(info.UserName, info.Password)
 
 	switch err {
 	case nil:
