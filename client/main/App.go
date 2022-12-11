@@ -13,7 +13,7 @@ import (
 	"fyne.io/fyne/v2/widget"
 )
 
-//Login UI content
+// Login UI content
 func LoginUI(Index chan int, userbox, groupbox, p2pbox *fyne.Container) (content *fyne.Container) {
 	nameEntry := widget.NewEntry()
 	nameEntry.SetPlaceHolder("input name")
@@ -52,8 +52,8 @@ func LoginUI(Index chan int, userbox, groupbox, p2pbox *fyne.Container) (content
 	return
 }
 
-//SignUp UI content
-func SignUpUI(Index chan int, userbox, groupbox, p2pbox *fyne.Container) (content *fyne.Container) {
+// SignUp UI content
+func SignUpUI(Index chan int) (content *fyne.Container) {
 	nameEntry := widget.NewEntry()
 	nameEntry.SetPlaceHolder("input name")
 	nameEntry.OnChanged = func(content string) {
@@ -73,7 +73,7 @@ func SignUpUI(Index chan int, userbox, groupbox, p2pbox *fyne.Container) (conten
 	SignUpBtn := widget.NewButton("Sign Up", func() {
 		fmt.Println("name:", nameEntry.Text, "password:", passEntry.Text, "password confirm:", passConfirmEntry.Text, "SignUp")
 		up := process.UserProcess{}
-		err := up.APPRegister(nameEntry.Text, passEntry.Text, passConfirmEntry.Text, userbox, groupbox, p2pbox)
+		err := up.Register(nameEntry.Text, passEntry.Text, passConfirmEntry.Text)
 		if err != nil {
 			s := fmt.Sprintf("Create account failed: %v\n", err)
 			logger.Error(s)
@@ -159,7 +159,7 @@ func MainUI(Index chan int) (content *container.AppTabs, userbox, groupbox, p2pb
 	return
 }
 
-//Change UI
+// Change UI
 func changeWindow(w1 *fyne.Window, w2 *fyne.Window, w3 *fyne.Window, Index chan int) {
 	for {
 		w := <-Index
@@ -199,7 +199,7 @@ func GUI() {
 	w1.Resize(fyne.Size{Width: 500, Height: 300})
 	w1.CenterOnScreen()
 
-	w2.SetContent(SignUpUI(Index, userbox, groupbox, p2pbox))
+	w2.SetContent(SignUpUI(Index))
 	w2.Resize(fyne.Size{Width: 500, Height: 300})
 	w2.CenterOnScreen()
 
